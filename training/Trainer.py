@@ -3,6 +3,11 @@ from training.Model import Model
 import training.Activation_funcs as aFunctions
 
 
+def shuffle_data(a):
+    idx = np.random.rand(a.shape[1]).argsort()
+    return a[:, idx]
+
+
 class Trainer:
     def __init__(self, config):
         self.data = np.concatenate(
@@ -14,6 +19,7 @@ class Trainer:
                    "activation": getattr(aFunctions, config['activation']),
                    "derivative_a": getattr(aFunctions, f'{config["activation"]}_derivation')} for index, layer in
                   enumerate(config['layers'][:-1])]
+        self.data = shuffle_data(self.data)
         self.model = Model(layers)
         self.learning_rate = config['learning_rate']
         self.max_iter = config['iterations']
@@ -21,20 +27,35 @@ class Trainer:
         self.epsilon = config['epsilon']
         self.losses = []
         self.features = []
-        n_batches = self.data.shape[1] // self.batch_size
-        self.batches = np.array_split(self.data[:, :self.batch_size * n_batches], n_batches, axis=1)
-        # TODO: Finish
-        x = 5
+        self.data_size = self.data.shape[1]
+        self.batches = [self.data[:, i:i + self.batch_size] for i in range(0, self.data_size, self.batch_size)]
+        self.n_batches = len(self.batches)
 
     @staticmethod
     def mean_squared_error(a_out, y):
         return ((a_out - y) ** 2).mean(axis=0)
 
+    def single_batch(self, index):
+        batch = self.batches[index][:-1, :]
+        a_out, features = self.model.forward(batch)
+        loss = self.mean_squared_error(a_out, batch)
+        gradient = self.model.backward(a_out, batch)
+        self.model.update(gradient, self.learning_rate)
+        self.model.clean_mem()
+        return np.mean(loss)
+
+    def single_iteration(self):
+        loss = 0
+        for i in range(self.n_batches):
+            loss += self.single_batch(i)
+        return loss / self.n_batches
+
     def train(self):
-        x = self.data[:-1, 0:10]
-        a_out = self.model.forward(x)
-        y = x
-        self.model.backward(a_out, y)
+        loss = []
+        for i in range(self.max_iter):
+            loss_iter = self.single_iteration()
+            print(f'Current loss: {loss_iter}')
+            loss.append(loss_iter)
 
     # def run_epoch(self):
     #     x = np.random.rand(4)

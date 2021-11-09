@@ -9,8 +9,8 @@
   },
   "training": {
     "batch_size": 10,
-    "iterations": 10,
+    "iterations": 10000,
     "epsilon": 0.00001,
-    "learning_rate": 0.00001
+    "learning_rate": 0.1
   }
 }

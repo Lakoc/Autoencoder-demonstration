@@ -37,6 +37,9 @@ class Model:
 
         return da_prev, dw_curr, db_curr
 
+    def clean_mem(self):
+        self.memory = {'a': [], 'z': []}
+
     def forward(self, x):
         a_curr = x
 
@@ -49,7 +52,7 @@ class Model:
             self.memory['a'].append(a_prev)
             self.memory['z'].append(z_curr)
 
-        return a_curr
+        return a_curr, self.memory['a'][self.n_layers // 2]
 
     def backward(self, a_out, y):
 

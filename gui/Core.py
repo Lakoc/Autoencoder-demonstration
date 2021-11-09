@@ -84,8 +84,8 @@ class Core:
             [sg.Text("Batch: 5\nEpoch: 5", expand_x=True), sg.Button("Edit config")],
             [sg.Graph(canvas_size=(400, 400), graph_bottom_left=(0, 0), graph_top_right=(400, 400),
                       background_color='white',
-                      key='GRAPH_WEIGHTS'), sg.Canvas(key="CANVAS_LOSS")],
-            [sg.Canvas(key="CANVAS_FEATURES", expand_x=True)],
+                      key='GRAPH_WEIGHTS'), sg.Canvas(key="CANVAS_LOSS", size=(400, 400))],
+            [sg.Canvas(key="CANVAS_FEATURES", expand_x=True, size=(400, 400))],
             [sg.Button("Single Batch"), sg.Button("Epoch"), sg.Button("Train/Stop")],
         ]
 
@@ -104,8 +104,9 @@ class Core:
     def handle_window2(self):
         while True:
             event, values = self.window_2.read()
-            if event == "Epoch":
-                self.trainer.run_epoch()
+            if event == "Edit config":
+                self.trainer.train()
+                exit(0)
 
             if event == 'Edit config':
                 self.win2_active = False
