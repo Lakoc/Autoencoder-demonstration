@@ -5,10 +5,8 @@ from torch import optim
 import matplotlib.pyplot as plt
 from torch.distributions.multivariate_normal import MultivariateNormal
 
-INPUT_SIZE= 4
-
 class AE(nn.Module):
-    def __init__(self):
+    def __init__(self, INPUT_SIZE):
         super().__init__()
         self.encoder = nn.Sequential(
             nn.Linear(INPUT_SIZE, 2),

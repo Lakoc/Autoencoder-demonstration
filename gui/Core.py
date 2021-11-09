@@ -1,7 +1,8 @@
 import PySimpleGUI as sg
 import numpy as np
-from Training.Trainer import Trainer
+from training.Trainer import Trainer
 import json
+from plots.Plotter import Plotter
 
 
 def remove_values_from_list(the_list, val):
@@ -29,10 +30,11 @@ def normalize_config(config):
     config['means'] = load_3d_arr_from_string(config['means'])[0, :]
     config['counts'] = load_3d_arr_from_string(config['counts'])[0, 0, :]
     config['layers'] = load_3d_arr_from_string(config['layers'])[0, 0, :]
-    config['batch_size'] = float(config['batch_size'])
-    config['iterations'] = float(config['iterations'])
-    config['convergence'] = float(config['convergence'])
+    config['batch_size'] = int(config['batch_size'])
+    config['iterations'] = int(config['iterations'])
+    config['epsilon'] = float(config['epsilon'])
     config['learning_rate'] = float(config['learning_rate'])
+    config['activation'] = config['activation'][0]
     return config
 
 
@@ -46,10 +48,13 @@ class Core:
         self.config = json.load(open('config.json', 'r'))
         self.init_layout()
         self.init_windows()
-        self.trainer = Trainer(self.window_2)
+        self.trainer = None
+        self.plotter = Plotter(self.window_2)
         self.win2_active = False
 
     def init_layout(self):
+        activation_choices = ('tanh', 'sigmoid')
+
         self.layout1 = [[sg.Text('Data config (ensure to have corresponding dimensionality of inputs) :\n')],
                         [sg.Text('Clusters (please ensure to bracket each cluster data):')],
                         [sg.Text('Cluster means:')], [
@@ -64,11 +69,14 @@ class Core:
                         [sg.Text(
                             'Number of neurons in layers\n(count must be odd, middle value must be equal to 2, first and last layer neuron count must equal):')],
                         [sg.Multiline(np.array(self.config['model']['layers']), size=(80, 5), key='layers')],
+                        [sg.Text('Choose activation function, used over layers:')],
+                        [sg.Listbox(activation_choices, size=(15, len(activation_choices)), default_values=['sigmoid'],
+                                    key='activation')],
                         [sg.Text('\nTraining config:\n')],
                         [sg.Text('Batch size (1 - number of generated points):'), sg.Input(32, key='batch_size')],
                         [sg.Text('Max iterations:'), sg.Input(self.config['training']['iterations'], key='iterations')],
-                        [sg.Text('Convergence level:'),
-                         sg.Input(self.config['training']['convergence'], key='convergence')],
+                        [sg.Text('Epsilon:'),
+                         sg.Input(self.config['training']['epsilon'], key='epsilon')],
                         [sg.Text('Learning rate:'),
                          sg.Input(self.config['training']['learning_rate'], key='learning_rate')],
                         [sg.Button('Done')]]
@@ -119,7 +127,7 @@ class Core:
                 break
 
             if event == 'Done' and not self.win2_active:
-                self.trainer.init_model(normalize_config(config))
+                self.trainer = Trainer(normalize_config(config))
                 self.win2_active = True
                 self.window_2.un_hide()
                 self.window_1.hide()
