@@ -7,7 +7,7 @@ class PlotterLoss(Plot):
         self.loss = []
 
     def update(self, x):
-        self.loss.append(x)
+        self.loss.extend(x)
         self.ax.cla()
         self.ax.plot(self.loss)
         self.fig_agg.draw()

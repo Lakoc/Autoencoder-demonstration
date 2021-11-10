@@ -1,8 +1,9 @@
 import numpy as np
+from training.Adam import AdamOptim
 
 
 class Model:
-    def __init__(self, architecture):
+    def __init__(self, architecture, learning_rate):
         self.weights = [np.random.randn(
             layer["output_dim"], layer["input_dim"]) * 0.1 for idx, layer in enumerate(architecture)]
         self.biases = [np.random.randn(
@@ -10,6 +11,7 @@ class Model:
         self.architecture = architecture
         self.memory = {'a': [], 'z': []}
         self.n_layers = len(self.weights)
+        self.optimizers = [AdamOptim(learning_rate) for _ in range(self.n_layers)]
 
     @staticmethod
     def der_mean_squared_error(a_out, y):
