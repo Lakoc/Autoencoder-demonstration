@@ -116,12 +116,16 @@ class Core:
                     self.trainer.iteration += 1
                 self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
                 self.plotter.plot_loss.update([loss])
+                weights, biases = self.trainer.model.weights, self.trainer.model.biases
+                self.plotter.plot_weights.update(weights, biases)
                 self.plotter.plot_features.update(self.trainer.features)
 
             if event == "Epoch":
                 loss = self.trainer.single_iteration()
                 self.plotter.plot_loss.update([loss])
                 self.plotter.plot_features.update(self.trainer.features)
+                weights, biases = self.trainer.model.weights, self.trainer.model.biases
+                self.plotter.plot_weights.update(weights, biases)
                 self.batch_index = 0
                 self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
 
@@ -131,12 +135,16 @@ class Core:
                     loss = self.trainer.single_iteration()
                     self.plotter.plot_loss.update([loss])
                     self.plotter.plot_features.update(self.trainer.features)
+                    weights, biases = self.trainer.model.weights, self.trainer.model.biases
+                    self.plotter.plot_weights.update(weights, biases)
                     self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
 
             if event == "Train":
                 loss = self.trainer.train()
                 self.plotter.plot_loss.update(loss)
                 self.plotter.plot_features.update(self.trainer.features)
+                weights, biases = self.trainer.model.weights, self.trainer.model.biases
+                self.plotter.plot_weights.update(weights, biases)
                 self.batch_index = 0
                 self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
 
@@ -160,8 +168,13 @@ class Core:
                 break
 
             if event == 'Done' and not self.win2_active:
-                self.trainer = Trainer(normalize_config(config))
+                config = normalize_config(config)
+                self.trainer = Trainer(config)
+                self.plotter.plot_weights.init_model(self.trainer.model.weights)
+                self.plotter.plot_loss.clear()
                 self.plotter.plot_features.update(self.trainer.features)
+                self.window_2['Counter'].update(f"Batch: 0\nEpoch: 0")
+
                 self.win2_active = True
                 self.window_2.un_hide()
                 self.window_1.hide()
