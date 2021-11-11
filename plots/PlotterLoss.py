@@ -13,5 +13,6 @@ class PlotterLoss(Plot):
         self.fig_agg.draw()
 
     def clear(self):
+        self.loss = []
         self.ax.cla()
         self.fig_agg.draw()

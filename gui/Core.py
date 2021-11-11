@@ -171,6 +171,7 @@ class Core:
                 config = normalize_config(config)
                 self.trainer = Trainer(config)
                 self.plotter.plot_weights.init_model(self.trainer.model.weights)
+                self.plotter.plot_weights.update(self.trainer.model.weights, self.trainer.model.biases)
                 self.plotter.plot_loss.clear()
                 self.plotter.plot_features.update(self.trainer.features)
                 self.window_2['Counter'].update(f"Batch: 0\nEpoch: 0")

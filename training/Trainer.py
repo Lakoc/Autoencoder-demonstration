@@ -8,6 +8,11 @@ def shuffle_data(d):
     return d[:, idx]
 
 
+def normalize_data(d):
+    d[0:4, :] /= np.max([np.abs(np.min(d[0:4, :])), np.abs(np.max(d[0:4, :]))])
+    return d
+
+
 class Trainer:
     def __init__(self, config):
         self.data = np.concatenate(
@@ -15,7 +20,7 @@ class Trainer:
                 np.random.multivariate_normal(mean, config['variances'][index], int(config['counts'][index])),
                 np.full(int(config['counts'][index]), index)[:, np.newaxis], axis=1) for index, mean in
                 enumerate(config['means'])], axis=0).T
-        self.data = shuffle_data(self.data)
+        self.data = shuffle_data(normalize_data(self.data))
 
         layers = [{"input_dim": int(layer), "output_dim": int(config['layers'][index + 1]),
                    "activation": getattr(aFunctions, config['activation']),
