@@ -34,7 +34,7 @@ def normalize_config(config):
     config['iterations'] = int(config['iterations'])
     config['epsilon'] = float(config['epsilon'])
     config['learning_rate'] = float(config['learning_rate'])
-    config['activation'] = config['activation'][0]
+    config['a_func'] = config['a_func'][0]
     return config
 
 
@@ -68,13 +68,17 @@ class Core:
                         [sg.Multiline(np.array(self.config['data']['counts']), size=(80, 5), key='counts')],
                         [sg.Text('\nModel config:\n')],
                         [sg.Text(
-                            'Number of neurons in layers\n(count must be odd, middle value must be equal to 2, first and last layer neuron count must equal):')],
+                            'Number of neurons in layers'
+                            '\nCount must be odd.\nMiddle layer must have exactly 2 neurons.\n'
+                            'First and last layer size must equal.\nVisualisation with more than 10 neurons per layer'
+                            ' or more than 9 layers might not work perfectly):')],
                         [sg.Multiline(np.array(self.config['model']['layers']), size=(80, 5), key='layers')],
                         [sg.Text('Choose activation function, used over layers:')],
                         [sg.Listbox(activation_choices, size=(15, len(activation_choices)), default_values=['tanh'],
-                                    key='activation')],
+                                    key='a_func')],
                         [sg.Text('\nTraining config:\n')],
-                        [sg.Text('Batch size (1 - number of generated points):'), sg.Input(32, key='batch_size')],
+                        [sg.Text('Batch size (1 - number of generated points):'),
+                         sg.Input(self.config['training']['batch_size'], key='batch_size')],
                         [sg.Text('Max iterations:'), sg.Input(self.config['training']['iterations'], key='iterations')],
                         [sg.Text('Epsilon:'),
                          sg.Input(self.config['training']['epsilon'], key='epsilon')],
@@ -87,7 +91,7 @@ class Core:
              sg.Canvas(key="CANVAS_LOSS", size=(400, 400))],
             [sg.Graph(canvas_size=(800, 400), graph_bottom_left=(0, 0), graph_top_right=(800, 400),
                       background_color='white',
-                      key='GRAPH_WEIGHTS')],
+                      key='GRAPH_WEIGHTS'), sg.Canvas(key="CANVAS_CMAP", size=(100, 400))],
             [sg.Button("Single Batch"), sg.Button("Epoch"), sg.Button("100 epochs"), sg.Button("Train")],
         ]
 
@@ -108,45 +112,28 @@ class Core:
             event, values = self.window_2.read()
 
             if event == "Single Batch":
-                loss = self.trainer.single_batch(self.batch_index)
-
+                loss = self.trainer.single_batch(self.trainer.get_batch_by_index(self.batch_index))
                 self.batch_index += 1
-                if self.batch_index == self.trainer.n_batches:
+                if self.batch_index == self.trainer.batches_count:
                     self.batch_index = 0
                     self.trainer.iteration += 1
-                self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
-                self.plotter.plot_loss.update([loss])
-                weights, biases = self.trainer.model.weights, self.trainer.model.biases
-                self.plotter.plot_weights.update(weights, biases)
-                self.plotter.plot_features.update(self.trainer.features)
+                self.plotter.plot_loss.extend_loss([loss])
+                self.update_window_state()
 
             if event == "Epoch":
-                loss = self.trainer.single_iteration()
-                self.plotter.plot_loss.update([loss])
-                self.plotter.plot_features.update(self.trainer.features)
-                weights, biases = self.trainer.model.weights, self.trainer.model.biases
-                self.plotter.plot_weights.update(weights, biases)
                 self.batch_index = 0
-                self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
+                self.single_epoch()
 
             if event == "100 epochs":
                 self.batch_index = 0
                 for _ in range(100):
-                    loss = self.trainer.single_iteration()
-                    self.plotter.plot_loss.update([loss])
-                    self.plotter.plot_features.update(self.trainer.features)
-                    weights, biases = self.trainer.model.weights, self.trainer.model.biases
-                    self.plotter.plot_weights.update(weights, biases)
-                    self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
+                    self.single_epoch()
 
             if event == "Train":
-                loss = self.trainer.train()
-                self.plotter.plot_loss.update(loss)
-                self.plotter.plot_features.update(self.trainer.features)
-                weights, biases = self.trainer.model.weights, self.trainer.model.biases
-                self.plotter.plot_weights.update(weights, biases)
+                loss = self.trainer.stochastic_gradient_descent()
+                self.plotter.plot_loss.extend_loss(loss)
                 self.batch_index = 0
-                self.window_2['Counter'].update(f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}")
+                self.update_window_state()
 
             if event == 'Edit config':
                 self.win2_active = False
@@ -159,8 +146,30 @@ class Core:
                 self.window_1.close()
                 exit(0)
 
-    def run(self):
+    def single_epoch(self):
+        loss = self.trainer.single_epoch()
+        self.plotter.plot_loss.extend_loss([loss])
+        self.update_window_state()
 
+    def update_window_state(self):
+        weights, biases = self.trainer.model.get_weights_biases()
+        self.window_2['Counter'].update(
+            f"Batch: {self.batch_index}\nEpoch: {self.trainer.iteration}\n"
+            f"Current loss: {self.plotter.plot_loss.get_last_loss():.3f}")
+        self.trainer.update_features()
+        self.plotter.plot_features.update(self.trainer.features)
+        self.plotter.plot_weights.update(weights, biases)
+        self.plotter.plot_loss.update()
+
+    def init_plots(self):
+        weights, biases = self.trainer.model.get_weights_biases()
+        self.plotter.plot_weights.init_model(weights)
+        self.plotter.plot_loss.clear()
+        self.batch_index = 0
+        self.trainer.iteration = 0
+        self.update_window_state()
+
+    def run(self):
         while True:
             event, config = self.window_1.read()
 
@@ -170,11 +179,7 @@ class Core:
             if event == 'Done' and not self.win2_active:
                 config = normalize_config(config)
                 self.trainer = Trainer(config)
-                self.plotter.plot_weights.init_model(self.trainer.model.weights)
-                self.plotter.plot_weights.update(self.trainer.model.weights, self.trainer.model.biases)
-                self.plotter.plot_loss.clear()
-                self.plotter.plot_features.update(self.trainer.features)
-                self.window_2['Counter'].update(f"Batch: 0\nEpoch: 0")
+                self.init_plots()
 
                 self.win2_active = True
                 self.window_2.un_hide()

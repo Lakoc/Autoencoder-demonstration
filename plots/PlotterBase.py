@@ -5,8 +5,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class Plot(ABC):
 
-    def __init__(self, window, key):
-        fig, ax = plt.subplots()
+    def __init__(self, window, key, figsize=None):
+        fig, ax = plt.subplots(figsize=figsize)
+        if figsize:
+            fig.tight_layout()
         self.ax = ax
         self.fig_agg = self.draw_figure(window, key, fig)
 
