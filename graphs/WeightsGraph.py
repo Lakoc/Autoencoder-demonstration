@@ -72,10 +72,11 @@ class WeightsGraph:
             for curr_index, neuron in enumerate(layer.T):
                 for next_index, value in enumerate(neuron):
                     rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(self.normalizer(value))[:-1]])
-                    self.graph.TKCanvas.itemconfig(self.weights[layer_index][next_index][curr_index], fill=rgb)
+                    weight = np.abs(value) * 5 + 1
+                    self.graph.TKCanvas.itemconfig(self.weights[layer_index][next_index][curr_index], fill=rgb, width=weight)
 
         for layer in list(self.neurons.keys())[1:]:
             for n_index, neuron in enumerate(self.neurons[layer]):
                 bias = biases[layer - 1][n_index]
-                rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(bias)[:-1]])
+                rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(self.normalizer(bias))[:-1]])
                 self.graph.TKCanvas.itemconfig(neuron[0], fill=rgb)

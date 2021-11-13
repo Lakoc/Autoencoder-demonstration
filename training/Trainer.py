@@ -57,6 +57,8 @@ class Trainer:
         for e in range(self.max_epochs):
             loss_epoch = self.single_epoch()
             loss.append(loss_epoch)
+            if loss_epoch < self.epsilon:
+                return loss
         return loss
 
     def single_epoch(self):

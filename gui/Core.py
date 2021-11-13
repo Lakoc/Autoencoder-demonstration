@@ -91,7 +91,7 @@ class Core:
              sg.Canvas(key="CANVAS_LOSS", size=(400, 400))],
             [sg.Graph(canvas_size=(800, 400), graph_bottom_left=(0, 0), graph_top_right=(800, 400),
                       background_color='white',
-                      key='GRAPH_WEIGHTS')],
+                      key='GRAPH_WEIGHTS'), sg.Canvas(key="CANVAS_CMAP", size=(100, 400))],
             [sg.Button("Single Batch"), sg.Button("Epoch"), sg.Button("100 epochs"), sg.Button("Train")],
         ]
 
