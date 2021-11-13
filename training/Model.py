@@ -1,85 +1,65 @@
 import numpy as np
-from training.Adam import AdamOptim
+
+
+class Layer:
+    def __init__(self, layer_config):
+        self.w = np.random.randn(layer_config["output_dim"], layer_config["input_dim"]) * 0.1
+        self.b = np.random.randn(layer_config["output_dim"]) * 0.1
+        self.a_func = layer_config["a_func"]
+        self.a_prime = layer_config["a_prime"]
+        self.a = None
+        self.z = None
+
+    def forward(self, x):
+        self.z = np.dot(x, self.w.T) + self.b
+        self.a = self.a_func(self.z)
+        return self.a
+
+    def backward(self, w_next, delta_next):
+        ap = self.a_prime(self.z)
+        delta_curr = np.dot(delta_next, w_next) * ap
+        return delta_curr
+
+    def update(self, nabla_b, nabla_w):
+        self.w += nabla_w
+        self.b += nabla_b
+        self.a = None
+        self.z = None
 
 
 class Model:
-    def __init__(self, architecture, learning_rate):
-        self.weights = [np.random.randn(
-            layer["output_dim"], layer["input_dim"]) * 0.1 for idx, layer in enumerate(architecture)]
-        self.biases = [np.random.randn(
-            layer["output_dim"], 1) * 0.1 for idx, layer in enumerate(architecture)]
-        self.architecture = architecture
-        self.memory = {'a': [], 'z': []}
-        self.n_layers = len(self.weights)
-        self.optimizers = [AdamOptim(learning_rate) for _ in range(self.n_layers)]
+    def __init__(self, architecture):
+        self.num_layers = len(architecture)
+        self.layers = [Layer(layer_config) for layer_config in architecture]
 
-    @staticmethod
-    def der_mean_squared_error(a_out, y):
-        return ((a_out - y) * 2).mean(axis=0)
+    def feedforward(self, a):
+        for layer in self.layers:
+            a = layer.forward(a)
 
-    @staticmethod
-    def single_layer_forward_propagation(a_prev, w_curr, b_curr, activation_func):
-        z_curr = np.dot(w_curr, a_prev) + b_curr
-        return activation_func(z_curr), z_curr
+    def get_features(self, a):
+        self.feedforward(a)
+        return self.layers[self.num_layers // 2 - 1].a
 
-    @staticmethod
-    def single_layer_backward_propagation(da_curr, w_curr, z_curr, a_prev, activation_der):
-        # number of examples
-        m = a_prev.shape[1]
+    def get_weights_biases(self):
+        weights = [layer.w for layer in self.layers]
+        biases = [layer.b for layer in self.layers]
+        return weights, biases
 
-        # calculation of the activation function derivative
-        dz_curr = activation_der(da_curr, z_curr)
+    def backpropagation(self, x, y, cost_derivative):
+        nabla_b = [np.zeros(layer.b.shape) for layer in self.layers]
+        nabla_w = [np.zeros(layer.w.shape) for layer in self.layers]
 
-        # derivative of the matrix W
-        dw_curr = np.dot(dz_curr, a_prev.T) / m
-        db_curr = np.sum(dz_curr, axis=1, keepdims=True) / m
+        self.feedforward(x)
 
-        # derivative of the matrix A_prev
-        da_prev = np.dot(w_curr.T, dz_curr)
+        delta = cost_derivative(self.layers[-1].a, y) * self.layers[-1].a_prime(self.layers[-1].z)
 
-        return da_prev, dw_curr, db_curr
+        for i in range(1, self.num_layers):
+            nabla_b[-i] = np.mean(delta, axis=0)
+            nabla_w[-i] = np.dot(delta.T, self.layers[-i - 1].a)
+            layer = self.layers[-i - 1]
+            delta = layer.backward(self.layers[-i].w, delta)
 
-    def clean_mem(self):
-        self.memory = {'a': [], 'z': []}
+        nabla_b[0] = np.mean(delta, axis=0)
+        nabla_w[0] = np.dot(delta.T, x)
 
-    def forward(self, x):
-        a_curr = x
-
-        for index, weights in enumerate(self.weights):
-            a_prev = a_curr
-
-            a_curr, z_curr = Model.single_layer_forward_propagation(a_prev, weights, self.biases[index],
-                                                                    self.architecture[index]['activation'])
-
-            self.memory['a'].append(a_prev)
-            self.memory['z'].append(z_curr)
-
-        return a_curr, self.memory['a'][self.n_layers // 2]
-
-    def backward(self, a_out, y):
-
-        # initiation of gradient descent algorithm
-        da_prev = Model.der_mean_squared_error(a_out, y)
-        gradients = {'b': [], 'w': []}
-
-        for index in range(self.n_layers):
-            # we number network layers from 1
-
-            da_curr = da_prev
-
-            a_prev = self.memory['a'][-index]
-            z_curr = self.memory['z'][-index]
-            w_curr = self.weights[-index]
-
-            der_activation = self.architecture[-index]['derivative_a']
-            da_prev, dw_curr, db_curr = self.single_layer_backward_propagation(
-                da_curr, w_curr, z_curr, a_prev, der_activation)
-
-            gradients['w'].append(dw_curr)
-            gradients['b'].append(db_curr)
-        return gradients
-
-    def update(self, gradients, learning_rate):
-        for layer_idx in range(self.n_layers):
-            self.weights[layer_idx] -= learning_rate * gradients['w'][-layer_idx]
-            self.biases[layer_idx] -= learning_rate * gradients['b'][-layer_idx]
+        return nabla_b, nabla_w

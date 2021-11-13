@@ -39,10 +39,10 @@ class WeightsGraph:
 
         for neuron in range(n_neurons):
             position = (layers_positions[0], neuron_positions[start_position + neuron])
-            neuron_graph = self.graph.DrawCircle(position, 15,
-                                                 fill_color='white', line_color='black')
+            # neuron_graph = self.graph.DrawCircle(position, 15,
+            #                                      fill_color='white', line_color='black')
             self.draw_arrow([position[0] - 45, position[1]], [position[0] - 20, position[1]], 1)
-            self.neurons[0].append((neuron_graph, position))
+            self.neurons[0].append(position)
 
         for layer in range(len(weights)):
             n_neurons = weights[layer].shape[0]
@@ -51,28 +51,31 @@ class WeightsGraph:
             self.weights[layer] = {}
             for neuron in range(n_neurons):
                 position = (layers_positions[layer + 1], neuron_positions[start_position + neuron])
-                neuron_graph = self.graph.DrawCircle(position, 15,
-                                                     fill_color='white', line_color='black')
-                self.neurons[layer + 1].append((neuron_graph, position))
+                self.neurons[layer + 1].append(position)
                 if layer == len(weights) - 1:
                     self.draw_arrow([position[0] + 20, position[1]], [position[0] + 45, position[1]], 1)
 
             for curr_index, weights_curr in enumerate(weights[layer]):
                 self.weights[layer][curr_index] = {}
                 for prev_index, weight_curr in enumerate(weights_curr):
-                    weight = self.graph.DrawLine(self.neurons[layer][prev_index][1],
-                                                 self.neurons[layer + 1][curr_index][1], width=5)
+                    weight = self.graph.DrawLine(self.neurons[layer][prev_index],
+                                                 self.neurons[layer + 1][curr_index], width=5)
                     self.weights[layer][curr_index][prev_index] = weight
+        for key, layer in self.neurons.items():
+            for l_p, position in enumerate(layer):
+                neuron = self.graph.DrawCircle(position, 15,
+                                               fill_color='white', line_color='black')
+                self.neurons[key][l_p] = (neuron, position)
 
     def update(self, weights, biases):
-        for layer in list(self.neurons.keys())[1:]:
-            for n_index, neuron in enumerate(self.neurons[layer]):
-                bias = biases[layer - 1][n_index][0]
-                rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(bias)[:-1]])
-                self.graph.TKCanvas.itemconfig(neuron[0], fill=rgb)
-
         for layer_index, layer in enumerate(weights):
             for curr_index, neuron in enumerate(layer.T):
                 for next_index, value in enumerate(neuron):
                     rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(self.normalizer(value))[:-1]])
                     self.graph.TKCanvas.itemconfig(self.weights[layer_index][next_index][curr_index], fill=rgb)
+
+        for layer in list(self.neurons.keys())[1:]:
+            for n_index, neuron in enumerate(self.neurons[layer]):
+                bias = biases[layer - 1][n_index]
+                rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(bias)[:-1]])
+                self.graph.TKCanvas.itemconfig(neuron[0], fill=rgb)

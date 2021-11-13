@@ -4,8 +4,9 @@ import torch.nn as nn
 from torch import optim
 import matplotlib.pyplot as plt
 from torch.distributions.multivariate_normal import MultivariateNormal
+from training.Network import Network
 
-INPUT_SIZE = 4
+INPUT_SIZE = 2
 
 
 class AE(nn.Module):
@@ -26,7 +27,6 @@ class AE(nn.Module):
 
 
 if __name__ == "__main__":
-
     epochs = 5000
     #  use gpu if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -41,45 +41,54 @@ if __name__ == "__main__":
 
     criterion = nn.MSELoss()
     N = 100
-    mean1 = torch.Tensor([[0.5, 0, 0, 0.3]])
-    mean2 = torch.Tensor([[0, 0.1, -0.5, 0.2]])
-    mean3 = torch.Tensor([[0, 0.2, 0.5, -0.6]])
-    mean4 = torch.Tensor([[0, 0.5, 0, 0.7]])
+    mean1 = torch.Tensor([[0.5, 0]])
+    mean2 = torch.Tensor([[0, 0.5]])
+    # mean3 = torch.Tensor([[0, 0.2, 0.5, -0.6]])
+    # mean4 = torch.Tensor([[0, 0.5, 0, 0.7]])
     cov = torch.eye(INPUT_SIZE) / 100
     distrib1 = MultivariateNormal(loc=mean1, covariance_matrix=cov)
     distrib2 = MultivariateNormal(loc=mean2, covariance_matrix=cov)
-    distrib3 = MultivariateNormal(loc=mean3, covariance_matrix=cov)
-    distrib4 = MultivariateNormal(loc=mean4, covariance_matrix=cov)
+    # distrib3 = MultivariateNormal(loc=mean3, covariance_matrix=cov)
+    # distrib4 = MultivariateNormal(loc=mean4, covariance_matrix=cov)
     x1 = torch.squeeze(distrib1.sample_n(N))
     x2 = torch.squeeze(distrib2.sample_n(N))
-    x3 = torch.squeeze(distrib3.sample_n(N))
-    x4 = torch.squeeze(distrib4.sample_n(N))
-    batch_features = torch.cat((x1, x2, x3, x4), 0)
-    # batch_features /= max(torch.max(batch_features), np.abs(torch.min(batch_features)))
-    num_epochs = 100
-    # do = nn.Dropout()
-    # comment out for under AE
-    features = np.zeros((4 * N, 2))
-    for epoch in range(num_epochs):
-        for index, data in enumerate(batch_features):
-            # ************************ forward *************************
-            output, feature = model(data)  # uncomment for fully connected
-            features[index] = feature.detach().numpy()
-            # feed img_bad for over AE
-            # output = conv_model(img)                       # uncomment for convulation AE
-            loss = criterion(output, data)
-            # ************************ backward *************************
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-        # ***************************** log ***************************
-        print(f'epoch [{epoch + 1}/{num_epochs}], loss:{loss.item(): .4f}')
-        if epoch % 10 == 0:
-            plt.plot(features[0:N, 0], features[0:N, 1], 'ro')
-            plt.plot(features[N:2 * N, 0], features[N:2 * N, 1], 'bo')
-            plt.plot(features[2 * N:3 * N, 0], features[2 * N:3 * N, 1], 'go')
-            plt.plot(features[3 * N:, 0], features[3 * N:, 1], 'o')
-            plt.show()
+    # x3 = torch.squeeze(distrib3.sample_n(N))
+    # x4 = torch.squeeze(distrib4.sample_n(N))
+    batch_features = torch.cat((x1, x2), 0).detach().numpy()
+    batch_features= batch_features[:,  :, np.newaxis]
+
+    net = Network([2, 3, 2])
+    training_data = [(val, val) for val in batch_features]
+
+    net.SGD(training_data, 1000, 10, 1.0)
+
+    x = 5
+
+    # baeatures /= max(torch.max(batch_features), np.abs(torch.min(batch_features)))
+    # num_epochs = 100
+    # # do = nn.Dropout()
+    # # comment out for under AE
+    # features = np.zeros((4 * N, 2))
+    # for epoch in range(num_epochs):
+    #     for index, data in enumerate(batch_features):
+    #         # ************************ forward *************************
+    #         output, feature = model(data)  # uncomment for fully connected
+    #         features[index] = output.detach().numpy()
+    #         # feed img_bad for over AE
+    #         # output = conv_model(img)                       # uncomment for convulation AE
+    #         loss = criterion(output, data)
+    #         # ************************ backward *************************
+    #         optimizer.zero_grad()
+    #         loss.backward()
+    #         optimizer.step()
+    #     # ***************************** log ***************************
+    #     print(f'epoch [{epoch + 1}/{num_epochs}], loss:{loss.item(): .4f}')
+    #     if epoch % 10 == 0:
+    #         plt.plot(features[0:N, 0], features[0:N, 1], 'ro')
+    #         plt.plot(features[N:2 * N, 0], features[N:2 * N, 1], 'bo')
+    #         plt.plot(features[2 * N:3 * N, 0], features[2 * N:3 * N, 1], 'go')
+    #         plt.plot(features[3 * N:, 0], features[3 * N:, 1], 'o')
+    #         plt.show()
     # for epoch in range(epochs):
     #     train_loss = 0
     #     # reset the gradients back to zero
