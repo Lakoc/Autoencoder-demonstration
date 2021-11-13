@@ -1,6 +1,6 @@
 import numpy as np
 from training.Model import Model
-import training.Activation_funcs as aFunctions
+import training.activation_funcs as aFunctions
 
 
 def normalize_data(d):
