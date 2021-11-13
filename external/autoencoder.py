@@ -2,9 +2,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch import optim
-import matplotlib.pyplot as plt
 from torch.distributions.multivariate_normal import MultivariateNormal
-from training.Network import Network
+from external.Network import Network
 
 INPUT_SIZE = 2
 
