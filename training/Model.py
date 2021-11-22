@@ -1,49 +1,32 @@
 import numpy as np
-
-
-class Layer:
-    def __init__(self, layer_config):
-        self.w = np.random.randn(layer_config["output_dim"], layer_config["input_dim"]) * 0.1
-        self.b = np.random.randn(layer_config["output_dim"]) * 0.1
-        self.a_func = layer_config["a_func"]
-        self.a_prime = layer_config["a_prime"]
-        self.a = None
-        self.z = None
-
-    def forward(self, x):
-        self.z = np.dot(x, self.w.T) + self.b
-        self.a = self.a_func(self.z)
-        return self.a
-
-    def backward(self, w_next, delta_next):
-        ap = self.a_prime(self.z)
-        delta_curr = np.dot(delta_next, w_next) * ap
-        return delta_curr
-
-    def update(self, nabla_b, nabla_w):
-        self.w += nabla_w
-        self.b += nabla_b
-        self.a = None
-        self.z = None
+from training.Layer import Layer
 
 
 class Model:
-    def __init__(self, architecture):
+    """Class that maintains all layers and apply feedforward and backward propagation over layers.
+     Inspired by https://neuralnetworksanddeeplearning.com/chap2.html"""
+
+    def __init__(self, architecture, features_layer):
         self.num_layers = len(architecture)
         self.layers = [Layer(layer_config) for layer_config in architecture]
+        # Skip first layer
+        self.features_layer = features_layer - 1
 
-    def feedforward(self, a):
-        for layer in self.layers:
-            a = layer.forward(a)
+    def get_shapes(self):
+        return [(layer.w.shape[0], layer.w.shape[1] + 1) for layer in self.layers]
 
     def get_features(self, a):
         self.feedforward(a)
-        return self.layers[self.num_layers // 2 - 1].a
+        return self.layers[self.features_layer].a
 
     def get_weights_biases(self):
         weights = [layer.w for layer in self.layers]
         biases = [layer.b for layer in self.layers]
         return weights, biases
+
+    def feedforward(self, a):
+        for layer in self.layers:
+            a = layer.forward(a)
 
     def backpropagation(self, x, y, cost_derivative):
         nabla_b = [np.zeros(layer.b.shape) for layer in self.layers]

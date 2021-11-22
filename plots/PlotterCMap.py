@@ -3,9 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class PlotterCmap(Plot):
+class PlotterCMap(Plot):
     def __init__(self, window, key):
-        super(PlotterCmap, self).__init__(window, key, figsize=(1, 4))
+        super(PlotterCMap, self).__init__(window, key, figsize=(1, 4))
         gradient = np.linspace(0, 1, 256)
         gradient = np.vstack((gradient, gradient)).T
 

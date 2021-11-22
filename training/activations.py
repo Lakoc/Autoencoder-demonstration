@@ -17,4 +17,15 @@ def tanh(z):
 
 
 def tanh_prime(z):
+    """Derivative of the tanh function."""
     return 1 - tanh(z) ** 2
+
+
+def linear(z):
+    """Does not apply any non linearity to output."""
+    return z
+
+
+def linear_prime(_):
+    """Derivative of the linear function of z."""
+    return 1

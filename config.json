@@ -1,6 +1,7 @@
 {
   "model": {
-    "layers": [4,5,2,5,4]
+    "layers": [4,6,2,5,4],
+    "selected_layer": 2
   },
   "data": {
     "means": [[0.5, 0, 0, 0.3], [0, 0.1, -0.5, 0.2], [0, 0.2, 0.5, -0.6], [0, 0.5, 0, 0.7]],
@@ -11,6 +12,9 @@
     "batch_size": 32,
     "iterations": 1000,
     "epsilon": 0.005,
-    "learning_rate": 0.005
+    "eta": 0.005,
+    "optimizer": "Adam",
+    "beta1": 0.9,
+    "beta2": 0.999
   }
 }

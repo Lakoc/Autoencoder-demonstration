@@ -3,6 +3,8 @@ import matplotlib
 
 
 class WeightsGraph:
+    """Maintains Neural network graphical representation on the canvas."""
+
     def __init__(self, graph):
         self.graph = graph
         self.neurons = None
@@ -11,10 +13,11 @@ class WeightsGraph:
         self.size = (800, 400)
         self.neurons = {}
         self.weights = {}
-        self.cmap = matplotlib.cm.get_cmap('RdYlBu')
+        self.c_map = matplotlib.cm.get_cmap('RdYlBu')
         self.normalizer = matplotlib.colors.Normalize(vmin=-1, vmax=1)
 
     def draw_arrow(self, start_point, end_point, width):
+        """Auxiliary function that draws arrow"""
         arr_len = end_point[0] - start_point[0]
         wing_len = 1 / 4 * arr_len
         self.graph.DrawLine(start_point, end_point, width=width)
@@ -22,6 +25,7 @@ class WeightsGraph:
         self.graph.DrawLine(end_point, [end_point[0] - wing_len, end_point[1] + wing_len], width=width)
 
     def init_model(self, weights):
+        """Init neural network model on specified canvas based on provided weights"""
         n_layers = len(weights) + 1
         containers_w = n_layers + 1
         max_neurons = max([layer.shape[1] for layer in weights])
@@ -39,8 +43,6 @@ class WeightsGraph:
 
         for neuron in range(n_neurons):
             position = (layers_positions[0], neuron_positions[start_position + neuron])
-            # neuron_graph = self.graph.DrawCircle(position, 15,
-            #                                      fill_color='white', line_color='black')
             self.draw_arrow([position[0] - 45, position[1]], [position[0] - 20, position[1]], 1)
             self.neurons[0].append(position)
 
@@ -68,15 +70,18 @@ class WeightsGraph:
                 self.neurons[key][l_p] = (neuron, position)
 
     def update(self, weights, biases):
+        """Update colors and size of objects on canvas based on current model state"""
         for layer_index, layer in enumerate(weights):
             for curr_index, neuron in enumerate(layer.T):
                 for next_index, value in enumerate(neuron):
-                    rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(self.normalizer(value))[:-1]])
+                    # Conversion to Canvas rgb representation
+                    rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.c_map(self.normalizer(value))[:-1]])
                     weight = np.abs(value) * 5 + 1
-                    self.graph.TKCanvas.itemconfig(self.weights[layer_index][next_index][curr_index], fill=rgb, width=weight)
+                    self.graph.TKCanvas.itemconfig(self.weights[layer_index][next_index][curr_index], fill=rgb,
+                                                   width=weight)
 
         for layer in list(self.neurons.keys())[1:]:
             for n_index, neuron in enumerate(self.neurons[layer]):
                 bias = biases[layer - 1][n_index]
-                rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.cmap(self.normalizer(bias))[:-1]])
+                rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.c_map(self.normalizer(bias))[:-1]])
                 self.graph.TKCanvas.itemconfig(neuron[0], fill=rgb)
