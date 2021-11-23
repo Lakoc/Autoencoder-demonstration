@@ -10,7 +10,7 @@ The project is licensed under  Apache License 2.0.
 ## Autoencoder
 An autoencoder is a type of artificial neural network used to learn efficient codings of unlabeled data. An autoencoder has two main parts: an encoder that maps the input into the code, and a decoder that maps the code to a reconstruction of the input. 
 ![](https://upload.wikimedia.org/wikipedia/commons/3/37/Autoencoder_schema.png)
-*The image was adopted from [Wikipedia](https://en.wikipedia.org/wiki/Autoencoder).*
+*<div align="center"> The image was adopted from [Wikipedia](https://en.wikipedia.org/wiki/Autoencoder). </div>*
 
 ## Installation
 To use this, simply download [anaconda distribution](https://www.anaconda.com/) and create new environment.
