@@ -40,6 +40,6 @@ And run gui application by next command.
 python3 main.py
 ```
 
-### Hope you will like the program. Cheers :)
+### Hope you  like the program. Cheers :)
 
 ![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
