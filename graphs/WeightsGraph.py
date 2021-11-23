@@ -15,6 +15,9 @@ class WeightsGraph:
         self.weights = {}
         self.c_map = matplotlib.cm.get_cmap('RdYlBu')
         self.normalizer = matplotlib.colors.Normalize(vmin=-1, vmax=1)
+        self.layers_positions = None
+        self.neuron_positions = None
+        self.max_neurons = 0
 
     def draw_arrow(self, start_point, end_point, width):
         """Auxiliary function that draws arrow"""
@@ -24,35 +27,34 @@ class WeightsGraph:
         self.graph.DrawLine(end_point, end_point - wing_len, width=width)
         self.graph.DrawLine(end_point, [end_point[0] - wing_len, end_point[1] + wing_len], width=width)
 
-    def init_model(self, weights):
-        """Init neural network model on specified canvas based on provided weights"""
+    def calculate_positions(self, weights):
         n_layers = len(weights) + 1
         containers_w = n_layers + 1
-        max_neurons = max([layer.shape[1] for layer in weights])
-        containers_h = max_neurons + 1
-        layers_positions = np.linspace(0, self.size[0], containers_w)
-        layers_positions = [(layers_positions[position] + layers_positions[position + 1]) / 2 for position in
-                            range(layers_positions.shape[0] - 1)]
-        neuron_positions = np.linspace(0, self.size[1], containers_h)
-        neuron_positions = [(neuron_positions[position] + neuron_positions[position + 1]) / 2 for position in
-                            range(neuron_positions.shape[0] - 1)]
+        self.max_neurons = max([layer.shape[1] for layer in weights])
+        containers_h = self.max_neurons + 1
+        self.layers_positions = np.linspace(0, self.size[0], containers_w)
+        self.layers_positions = [(self.layers_positions[position] + self.layers_positions[position + 1]) / 2 for
+                                 position in
+                                 range(self.layers_positions.shape[0] - 1)]
+        self.neuron_positions = np.linspace(0, self.size[1], containers_h)
+        self.neuron_positions = [(self.neuron_positions[position] + self.neuron_positions[position + 1]) / 2 for
+                                 position in
+                                 range(self.neuron_positions.shape[0] - 1)]
 
-        n_neurons = weights[0].shape[1]
-        start_position = (max_neurons - n_neurons) // 2
-        self.neurons[0] = []
-
-        for neuron in range(n_neurons):
-            position = (layers_positions[0], neuron_positions[start_position + neuron])
+    def init_first_layer(self, start_position, number_of_neurons):
+        for neuron in range(number_of_neurons):
+            position = (self.layers_positions[0], self.neuron_positions[start_position + neuron])
             self.draw_arrow([position[0] - 45, position[1]], [position[0] - 20, position[1]], 1)
             self.neurons[0].append(position)
 
+    def process_other_layers(self, weights):
         for layer in range(len(weights)):
             n_neurons = weights[layer].shape[0]
-            start_position = (max_neurons - n_neurons) // 2
+            start_position = (self.max_neurons - n_neurons) // 2
             self.neurons[layer + 1] = []
             self.weights[layer] = {}
             for neuron in range(n_neurons):
-                position = (layers_positions[layer + 1], neuron_positions[start_position + neuron])
+                position = (self.layers_positions[layer + 1], self.neuron_positions[start_position + neuron])
                 self.neurons[layer + 1].append(position)
                 if layer == len(weights) - 1:
                     self.draw_arrow([position[0] + 20, position[1]], [position[0] + 45, position[1]], 1)
@@ -63,11 +65,23 @@ class WeightsGraph:
                     weight = self.graph.DrawLine(self.neurons[layer][prev_index],
                                                  self.neurons[layer + 1][curr_index], width=5)
                     self.weights[layer][curr_index][prev_index] = weight
+
+    def draw_neurons(self):
         for key, layer in self.neurons.items():
             for l_p, position in enumerate(layer):
                 neuron = self.graph.DrawCircle(position, 15,
                                                fill_color='white', line_color='black')
                 self.neurons[key][l_p] = (neuron, position)
+
+    def init_model(self, weights):
+        """Init neural network model on specified canvas based on provided weights"""
+        self.neurons[0] = []
+        n_neurons = weights[0].shape[1]
+        start_position = (self.max_neurons - n_neurons) // 2
+        self.calculate_positions(weights)
+        self.init_first_layer(start_position, n_neurons)
+        self.process_other_layers(weights)
+        self.draw_neurons()
 
     def update(self, weights, biases):
         """Update colors and size of objects on canvas based on current model state"""
