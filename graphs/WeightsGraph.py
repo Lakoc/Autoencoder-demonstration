@@ -92,7 +92,7 @@ class WeightsGraph:
                     rgb = "#%02x%02x%02x" % tuple([int(val * 255) for val in self.c_map(self.normalizer(value))[:-1]])
                     weight = np.abs(value) * 5 + 1
                     self.graph.TKCanvas.itemconfig(self.weights[layer_index][next_index][curr_index], fill=rgb,
-                                                   width=weight)
+                                                   width=int(weight))
 
         for layer in list(self.neurons.keys())[1:]:
             for n_index, neuron in enumerate(self.neurons[layer]):
