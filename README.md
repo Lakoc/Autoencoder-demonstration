@@ -20,17 +20,29 @@ of the input.
 *<div align="center"> The image was adopted from [Wikipedia](https://en.wikipedia.org/wiki/Autoencoder). </div>*
 
 ## Installation
+Change directory to the root of the project.
+```bash
+cd __PROJECT_ROOT__
+```
 
-To use this, simply download [anaconda distribution](https://www.anaconda.com/) and create new environment.
+### Anaconda
+Create new environment with [anaconda distribution](https://www.anaconda.com/) and activate it.
 
 ```bash
 conda env create -f environment.yml
+conda activate SFC
 ```
 
-Activate enviroment and export pythonpath.
-
+### Venv
+Alternatively [virtual environment](https://docs.python.org/3/library/venv.html) could be used.
 ```bash
-conda activate SFC
+python3 -m venv env
+source env/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+Export project root as PYTHONPATH.
+```bash
 export PYTHONPATH=$PWD:$PYTHONPATH
 ```
 
