@@ -58,7 +58,11 @@ And run gui application by next command.
 python3 main.py
 ```
 
-In case tk, install necessary python3.8-tk lib.
+In case following error appears, your python is not configured for tkinter.
+`ModuleNotFoundError: No module named '_tkinter'`
+
+
+Install necessary python3.8-tk lib by following command (use your package manager).
 ```bash
 sudo apt install python3.8-tk
 ```
