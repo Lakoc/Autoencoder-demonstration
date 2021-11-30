@@ -44,7 +44,7 @@ cd __PROJECT_ROOT__
 
 Install required packages
 ```bash
-pip install -r requirements.txt --no-cache-dir
+python3.8 -m pip install -r requirements.txt --no-cache-dir
 ```
 
 Export project root as PYTHONPATH.
@@ -55,7 +55,7 @@ export PYTHONPATH=$PWD:$PYTHONPATH
 And run gui application by next command.
 
 ```bash
-python3 main.py
+python3.8 main.py
 ```
 
 In case following error appears, your python is not configured for tkinter.
