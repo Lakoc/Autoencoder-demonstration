@@ -84,6 +84,7 @@ class Core:
         self.plotter.plot_features.update(self.trainer.features)
         self.plotter.plot_weights.update(weights, biases)
         self.plotter.plot_loss.update()
+        self.window_2.refresh()
 
     def init_plots(self):
         weights, biases = self.trainer.model.get_weights_biases()

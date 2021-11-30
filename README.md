@@ -25,20 +25,26 @@ Change directory to the root of the project.
 cd __PROJECT_ROOT__
 ```
 
-### Anaconda
-Create new environment with [anaconda distribution](https://www.anaconda.com/) and activate it.
+### Configure environment
+1. #### Anaconda
+    Create new environment with [anaconda distribution](https://www.anaconda.com/) and activate it.
+    
+    ```bash
+    conda create -n sfc2 python=3.8
+    conda activate sfc2
+    ```
 
-```bash
-conda env create -f environment.yml
-conda activate SFC
-```
+2. #### Venv
+    Alternatively [virtual environment](https://docs.python.org/3/library/venv.html) could be used. Ensure to have [python 3.8](https://www.python.org/downloads/release/python-380/) installed.
+    
+    ```bash
+    python3.8 -m venv env
+    source env/bin/activate
+    ```
 
-### Venv
-Alternatively [virtual environment](https://docs.python.org/3/library/venv.html) could be used.
+Install required packages
 ```bash
-python3 -m venv env
-source env/bin/activate
-python3 -m pip install -r requirements.txt
+pip install -r requirements.txt --no-cache-dir
 ```
 
 Export project root as PYTHONPATH.
@@ -50,6 +56,11 @@ And run gui application by next command.
 
 ```bash
 python3 main.py
+```
+
+In case tk, install necessary python3.8-tk lib.
+```bash
+sudo apt install python3.8-tk
 ```
 
 ### Hope you  like the program. Cheers :)
