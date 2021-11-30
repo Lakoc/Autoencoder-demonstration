@@ -30,8 +30,8 @@ cd __PROJECT_ROOT__
     Create new environment with [anaconda distribution](https://www.anaconda.com/) and activate it.
     
     ```bash
-    conda create -n sfc2 python=3.8
-    conda activate sfc2
+    conda create -n sfc python=3.8
+    conda activate sfc
     ```
 
 2. #### Venv
